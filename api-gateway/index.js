@@ -7,11 +7,9 @@ const PORT = 3000;
 app.use(
   "/auth",
   createProxyMiddleware({
-    target: "http://localhost:3000",
+    target: "http://localhost:3001",
     changeOrigin: true,
-    pathRewrite: {
-      "^/auth": "", // strip /auth from the URL
-    },
+    pathRewrite: { "^/auth": "" },
   }),
 );
 

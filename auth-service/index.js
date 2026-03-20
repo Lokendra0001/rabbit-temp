@@ -25,10 +25,33 @@ let ch;
 
 async function createConnection() {
   const RABBITMQ_HOST = process.env.RABBITMQ_HOST || "rabbitmq";
-  amqp.connect(`amqp://${RABBITMQ_HOST}:5672`);
-  ch = await conn.createChannel();
+  const url = `amqp://${RABBITMQ_HOST}:5672`;
 
-  console.log("Connection and Channel created successfully! 1");
+  while (true) {
+    try {
+      console.log(`Connecting to RabbitMQ at ${url}...`);
+      conn = await amqp.connect(url);
+      ch = await conn.createChannel();
+      console.log("Connection and Channel created successfully! 1");
+
+      conn.on("error", (err) => {
+        console.error("RabbitMQ connection error", err);
+      });
+
+      conn.on("close", () => {
+        console.warn("RabbitMQ connection closed. Reconnecting...");
+        setTimeout(createConnection, 5000);
+      });
+
+      break;
+    } catch (err) {
+      console.error(
+        "Failed to connect to RabbitMQ. Retrying in 5 seconds...",
+        err.message,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+  }
 }
 
 createConnection();
